@@ -166,16 +166,30 @@ open class MaskedTextFieldDelegate: NSObject, UITextFieldDelegate {
         shouldChangeCharactersIn range: NSRange,
         replacementString string: String) -> Bool {
         
+        // Hack #1 to allow autocomplete
+        if string == " ", range == NSMakeRange(0, 0) {
+            return true
+        }
+        
+        // Hack #2 to get phone number without country code
+        var newString: String = string
+        if newString.count > 1, range == NSMakeRange(0, 0) {
+            newString = string.trimmingCharacters(in: .whitespaces)
+            if newString.count >= mask.acceptableValueLength() {
+                newString = String(newString.suffix(mask.acceptableValueLength()))
+            }
+        }
+        
         let extractedValue: String
         let complete:       Bool
         
         if isDeletion(
             inRange: range,
-            string: string
+            string: newString
         ) {
             (extractedValue, complete) = self.deleteText(inRange: range, inField: textField)
         } else {
-            (extractedValue, complete) = self.modifyText(inRange: range, inField: textField, withText: string)
+            (extractedValue, complete) = self.modifyText(inRange: range, inField: textField, withText: newString)
         }
         
         self.listener?.textField?(
@@ -183,7 +197,7 @@ open class MaskedTextFieldDelegate: NSObject, UITextFieldDelegate {
             didFillMandatoryCharacters: complete,
             didExtractValue: extractedValue
         )
-        let _ = self.listener?.textField?(textField, shouldChangeCharactersIn: range, replacementString: string)
+        let _ = self.listener?.textField?(textField, shouldChangeCharactersIn: range, replacementString: newString)
         return false
     }
     
