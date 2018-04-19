@@ -176,7 +176,12 @@ open class MaskedTextFieldDelegate: NSObject, UITextFieldDelegate {
         if newString.count > 1, range == NSMakeRange(0, 0) {
             newString = string.trimmingCharacters(in: .whitespaces)
             if newString.count >= mask.acceptableValueLength() {
-                newString = String(newString.suffix(mask.acceptableValueLength()))
+                if let spaceIndex = newString.index(of: " ") {
+                    newString = String(newString[spaceIndex...])
+                }
+                else {
+                    newString = String(newString.suffix(mask.acceptableValueLength()))
+                }
             }
         }
         
