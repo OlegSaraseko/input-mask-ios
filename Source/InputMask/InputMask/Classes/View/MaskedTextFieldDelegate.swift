@@ -171,18 +171,17 @@ open class MaskedTextFieldDelegate: NSObject, UITextFieldDelegate {
             return true
         }
         
-        // Hack #2 to get phone number without country code
-        var newString: String = string
-        if newString.count > 1, range == NSMakeRange(0, 0) {
-            newString = string.trimmingCharacters(in: .whitespaces)
-            if newString.count >= mask.acceptableValueLength() {
-                if let spaceIndex = newString.index(of: " ") {
-                    newString = String(newString[spaceIndex...])
-                }
-                else {
-                    newString = String(newString.suffix(mask.acceptableValueLength()))
-                }
-            }
+        // Hack #2 to get a phone number without country code that was pasted in
+        let trimmedString: String = string.trimmingCharacters(in: .whitespaces)
+        let newString: String
+        if trimmedString.count >= mask.acceptableValueLength(), range == NSMakeRange(0, 0) {
+            let notDecimalDigitsCharacterSet = CharacterSet.decimalDigits.inverted
+            let stringComponents: [String] = trimmedString.components(separatedBy: notDecimalDigitsCharacterSet).filter({ $0.count > 0 })
+            let rejoinedString = stringComponents.joined()
+            newString = String(rejoinedString.suffix(mask.acceptableValueLength()))
+        }
+        else {
+            newString = trimmedString
         }
         
         let extractedValue: String
